@@ -1,0 +1,37 @@
+version: '3'
+
+services:
+  pos-bd:
+    container_name: pos-mysql-c
+    build:
+      context: ./
+      dockerfile: ./.docker/mysql/Dockerfile
+    restart: always
+    ports:
+      - '3306:3306'
+    environment:
+      - MYSQL_ROOT_PASSWORD=root 
+      - MYSQL_DATABASE=pos_db
+    volumes:
+      - ./.docker/mysql/initdb:/docker-entrypoint-initdb.d:ro
+      - ./.docker/mysql/data:/var/lib/mysql:rw
+    networks:
+      - pos-network
+
+  pos-node:
+    container_name: pos-node-c
+    build:
+      context: ./
+      dockerfile: ./.docker/node/Dockerfile
+    volumes:
+      - ./app:/usr/src/app:rw
+    depends_on:
+      - pos-bd
+    networks:
+      - pos-network
+    ports:
+      - 8080:8080
+
+networks:
+  pos-network:
+    driver: bridge
